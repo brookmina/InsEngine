@@ -287,12 +287,18 @@
                                         <button type="button" @click="triggerChatFileUpload" class="w-9 h-9 shrink-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-paperclip text-base"></i></button>
                                         <input type="file" ref="chatFileInput" class="hidden" @change="handleChatFileUpload" accept="image/*,.pdf,.doc,.docx">
 
+                                        <!-- 移除內建的語音按鈕，改為單純輸入框 -->
                                         <div class="flex-1 bg-slate-100 rounded-full flex items-center relative overflow-hidden transition-shadow focus-within:ring-2 focus-within:ring-blue-500 border border-transparent">
-                                            <input type="text" v-model="userInput" :placeholder="isRecording ? '聆聽中...' : '輸入問題...'" class="w-full bg-transparent border-none pl-4 pr-10 py-2 text-sm focus:outline-none h-10">
-                                            <button type="button" @click="toggleVoiceInput" class="absolute right-1 w-8 h-8 shrink-0 flex items-center justify-center transition-colors rounded-full" :class="isRecording ? 'text-red-500 bg-red-50 animate-pulse' : 'text-slate-400 hover:text-blue-600'">
-                                                <i class="fa-solid" :class="isRecording ? 'fa-microphone-lines' : 'fa-microphone text-base'"></i>
-                                            </button>
+                                            <input type="text" v-model="userInput" :placeholder="isRecording ? '🎙️ 聆聽中...' : '輸入問題...'" class="w-full bg-transparent border-none px-4 py-2 text-sm focus:outline-none h-10">
                                         </div>
+                                        
+                                        <!-- 獨立的語音辨識按鈕 -->
+                                        <button type="button" @click="toggleVoiceInput" 
+                                            class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center transition-all border shadow-sm ml-0.5" 
+                                            :class="isRecording ? 'bg-red-50 text-red-500 border-red-200 animate-pulse' : 'bg-white text-slate-500 border-slate-200 hover:text-blue-600 hover:bg-blue-50'" title="語音輸入">
+                                            <i class="fa-solid" :class="isRecording ? 'fa-microphone-lines' : 'fa-microphone text-base'"></i>
+                                        </button>
+
                                         <button type="submit" :disabled="(!userInput.trim() && !chatAttachment) || isTyping" class="bg-blue-600 disabled:bg-slate-300 text-white w-10 h-10 shrink-0 rounded-full flex items-center justify-center shadow-md transition-colors ml-0.5"><i class="fa-solid fa-paper-plane text-sm"></i></button>
                                     </form>
                                 </div>
@@ -1087,18 +1093,84 @@
                 const handleChatFileUpload = (e) => { if (e.target.files[0]) { chatAttachment.value = e.target.files[0]; showToast('已夾帶檔案'); } e.target.value = ''; };
                 const removeChatAttachment = () => { chatAttachment.value = null; };
 
-                const isRecording = ref(false); let recognition = null;
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (SpeechRecognition) {
-                    recognition = new SpeechRecognition(); recognition.continuous = false; recognition.lang = 'zh-TW';
-                    recognition.onresult = (event) => { if (event.results[0][0].transcript) userInput.value += event.results[0][0].transcript; };
-                    recognition.onerror = () => { isRecording.value = false; showToast('語音辨識失敗。'); };
-                    recognition.onend = () => { isRecording.value = false; };
-                }
+                // === 語音辨識功能優化 (加入環境受限時的模擬模式) ===
+                const isRecording = ref(false); 
+                let recognition = null;
+                
+                const simulateVoiceInput = () => {
+                    isRecording.value = true;
+                    setTimeout(() => {
+                        if (isRecording.value) {
+                            const mockTexts = ['我想了解醫療實支實付', '這次住院可以理賠多少？', '我的骨折有賠嗎？', '幫我比較這兩個商品'];
+                            const randomText = mockTexts[Math.floor(Math.random() * mockTexts.length)];
+                            userInput.value = userInput.value ? userInput.value + ' ' + randomText : randomText;
+                            isRecording.value = false;
+                            showToast('✅ 模擬語音辨識成功');
+                        }
+                    }, 2500);
+                };
+                
                 const toggleVoiceInput = () => {
-                    if (!recognition) return showToast('瀏覽器不支援語音辨識。');
-                    if (isRecording.value) { recognition.stop(); isRecording.value = false; } 
-                    else { recognition.start(); isRecording.value = true; showToast('請開始說話...'); }
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) {
+                        showToast('⚠️ 瀏覽器不支援，啟用「語音模擬模式」');
+                        simulateVoiceInput();
+                        return;
+                    }
+
+                    // 如果正在錄音中，則停止
+                    if (isRecording.value) { 
+                        if (recognition) recognition.stop(); 
+                        isRecording.value = false; 
+                        return;
+                    } 
+                    
+                    try {
+                        // 每次都重新實例化以避免狀態異常
+                        recognition = new SpeechRecognition(); 
+                        recognition.continuous = false; 
+                        recognition.interimResults = false;
+                        recognition.lang = 'zh-TW';
+
+                        recognition.onstart = () => {
+                            isRecording.value = true;
+                            showToast('🎙️ 麥克風已啟動，請開始說話...');
+                        };
+
+                        recognition.onresult = (event) => { 
+                            if (event.results[0][0].transcript) {
+                                const newText = event.results[0][0].transcript;
+                                // 若原本已有輸入文字，則補上一個空格再接續語音內容
+                                userInput.value = userInput.value ? userInput.value + ' ' + newText : newText; 
+                            }
+                        };
+
+                        recognition.onerror = (event) => { 
+                            if (event.error === 'not-allowed') {
+                                showToast('⚠️ 環境限制麥克風權限，啟用「語音模擬模式」');
+                                simulateVoiceInput();
+                            } else if (event.error === 'no-speech') {
+                                isRecording.value = false; 
+                                showToast('⚠️ 沒有偵測到聲音，請再試一次');
+                            } else {
+                                isRecording.value = false; 
+                                showToast(`❌ 語音辨識發生錯誤 (${event.error})`);
+                            }
+                            console.error('Speech recognition error:', event.error);
+                        };
+
+                        recognition.onend = () => { 
+                            // 只有在真實 API 結束且沒有切換到模擬模式時才重置狀態
+                            if (recognition) isRecording.value = false; 
+                        };
+
+                        // 啟動錄音
+                        recognition.start(); 
+                    } catch (e) {
+                        showToast('⚠️ 無法啟動語音引擎，啟用「語音模擬模式」');
+                        simulateVoiceInput();
+                        console.error('Speech API Error:', e);
+                    }
                 };
 
                 const isDragging = ref(false); const startX = ref(0); const scrollLeft = ref(0); let dragged = false;
