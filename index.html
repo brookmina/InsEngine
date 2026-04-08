@@ -177,7 +177,7 @@
             <!-- Main App View 主程式視圖 -->
             <div v-else class="flex flex-col h-full w-full relative">
                 <!-- Header -->
-                <header class="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800 text-white pt-12 pb-5 px-5 flex items-center justify-between shadow-lg z-20 shrink-0 relative overflow-hidden">
+                <header class="bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-800 text-white pt-8 pb-5 px-5 flex items-center justify-between shadow-lg z-20 shrink-0 relative overflow-hidden">
                     <div class="flex items-center">
                         <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3 shrink-0"><i class="fa-solid fa-robot text-xl"></i></div>
                         <div>
@@ -337,6 +337,19 @@
                                                 <span v-for="(item, idx) in selectedIncident.items" :key="idx" class="bg-white px-2.5 py-1 rounded-md border border-emerald-100 text-xs text-emerald-800">{{ item }}</span>
                                             </div>
                                         </div>
+                                        <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 shadow-sm">
+                                            <h3 class="font-bold text-amber-800 text-sm mb-2"><i class="fa-solid fa-folder-open"></i> 應備文件</h3>
+                                            <div class="space-y-2">
+                                                <div v-for="(doc, idx) in selectedIncident.docs" :key="idx" class="bg-white p-2 rounded-lg border border-amber-100 flex gap-2">
+                                                    <i class="fa-regular fa-square-check text-amber-500 mt-0.5 text-sm"></i>
+                                                    <div>
+                                                        <h4 class="text-xs font-bold text-slate-800">{{ doc.title }}</h4>
+                                                        <p class="text-[10px] text-slate-500 leading-tight mt-0.5">{{ doc.desc }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
                                         <div class="mt-6 border-t border-slate-200 pt-6">
                                             <h3 class="font-bold text-slate-800 text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-calculator text-blue-500"></i> 智能理賠試算</h3>
                                             <div v-if="claimCalcStatus === 'idle'">
@@ -457,7 +470,7 @@
                                                                 <div class="flex flex-col gap-1 col-span-2 pt-2 border-t border-slate-50"><span class="text-slate-400 text-[10px] flex items-center gap-1"><i class="fa-solid fa-user text-slate-300"></i> 要保人</span><span class="font-bold text-slate-700 bg-slate-50 border border-slate-100 px-2 py-1.5 rounded-lg inline-flex items-center gap-1.5 w-fit shadow-sm">{{ policy.applicant || '未提供' }}</span></div>
                                                             </div>
                                                         </div>
-                                                        <div class="flex justify-end"><button @click="startEditPolicy(policy)" class="text-xs bg-white text-blue-600 border border-slate-200 px-4 py-2 rounded-xl font-bold shadow-sm"><i class="fa-solid fa-pen-to-square"></i> 編輯明細</button></div>
+                                                        <div class="flex justify-end"><button @click="startEditPolicy(policy)" class="text-xs bg-white text-blue-600 border border-slate-200 px-4 py-2 rounded-full font-bold shadow-sm"><i class="fa-solid fa-pen-to-square"></i> 編輯明細</button></div>
                                                     </div>
                                                     <div v-else class="p-4 space-y-3">
                                                         <div class="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
@@ -468,8 +481,8 @@
                                                             </div>
                                                         </div>
                                                         <div class="flex gap-3 pt-2">
-                                                            <button @click="cancelEditPolicy(policy.id)" class="flex-1 py-3 bg-white border border-slate-200 text-slate-500 text-xs font-bold rounded-xl shadow-sm">取消</button>
-                                                            <button @click="saveEditPolicy(policy.id)" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-xl shadow-md">儲存明細</button>
+                                                            <button @click="cancelEditPolicy(policy.id)" class="flex-1 py-3 bg-white border border-slate-200 text-slate-500 text-xs font-bold rounded-full shadow-sm">取消</button>
+                                                            <button @click="saveEditPolicy(policy.id)" class="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold rounded-full shadow-md">儲存明細</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -487,8 +500,8 @@
                                                     </select>
                                                 </div>
                                                 <div class="flex gap-2 pt-3 border-t border-blue-100 mt-3">
-                                                    <button @click="cancelAddPolicy" class="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 text-xs rounded-lg font-bold">取消</button>
-                                                    <button @click="savePolicy" class="flex-1 py-2.5 bg-blue-600 text-white text-xs rounded-lg font-bold shadow-sm">儲存保單</button>
+                                                    <button @click="cancelAddPolicy" class="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 text-xs rounded-full font-bold">取消</button>
+                                                    <button @click="savePolicy" class="flex-1 py-2.5 bg-blue-600 text-white text-xs rounded-full font-bold shadow-sm">儲存保單</button>
                                                 </div>
                                             </div>
                                         </transition>
@@ -549,7 +562,7 @@
                                         <div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg">相似度 {{ sim.match }}%</div>
                                         <div class="mb-2 pr-16 relative z-10"><seamless-action-item :item-data="{ id: sim.id, name: sim.name, company: selectedCompany }" :display-text="sim.name" text-class="font-bold text-slate-800 text-sm cursor-pointer hover:text-blue-600" :show-icon="true" @view="openProductModal" @compare="addToCompare" @action-click="openProductModal(sim.id)"></seamless-action-item></div>
                                         <div class="bg-blue-50 rounded-lg p-2.5 text-xs"><span class="font-bold text-blue-800 block mb-1">💡 推薦理由：</span><span class="text-slate-600">{{ sim.reason }}</span></div>
-                                        <button @click="jumpToCompare(similarTarget, sim.id)" class="mt-3 w-full py-2 bg-slate-800 text-white rounded-lg text-xs font-medium hover:bg-slate-700 transition">與此商品進行比較</button>
+                                        <button @click="jumpToCompare(similarTarget, sim.id)" class="mt-3 w-full py-2 bg-slate-800 text-white rounded-full text-xs font-medium hover:bg-slate-700 transition">與此商品進行比較</button>
                                     </div>
                                 </div>
                             </div>
@@ -562,7 +575,7 @@
                             <div class="p-4 bg-white border-b border-slate-200 shadow-sm z-10 shrink-0">
                                 <h2 class="font-bold text-slate-800 text-base mb-2 flex items-center gap-2"><i class="fa-solid fa-arrow-trend-up text-red-500"></i> 近期發燒話題</h2>
                                 <div class="flex overflow-x-auto no-scrollbar gap-2 pb-1">
-                                    <button v-for="topic in trendingTopics" :key="topic.id" @click="selectedTopic = topic" class="whitespace-nowrap px-4 py-2 rounded-xl border text-sm font-medium transition-colors shrink-0" :class="selectedTopic?.id === topic.id ? 'bg-red-50 border-red-200 text-red-700 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"><span class="mr-1">{{ topic.emoji }}</span> {{ topic.title }}</button>
+                                    <button v-for="topic in trendingTopics" :key="topic.id" @click="selectedTopic = topic" class="whitespace-nowrap px-4 py-2 rounded-full border text-sm font-medium transition-colors shrink-0" :class="selectedTopic?.id === topic.id ? 'bg-red-50 border-red-200 text-red-700 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'"><span class="mr-1">{{ topic.emoji }}</span> {{ topic.title }}</button>
                                 </div>
                             </div>
                             <div class="flex-1 overflow-y-auto no-scrollbar p-4" v-if="selectedTopic">
@@ -574,7 +587,7 @@
                                 <div class="space-y-4">
                                     <div v-for="(pitch, idx) in selectedTopic.pitches" :key="idx" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                                         <div class="bg-slate-50 px-3 py-2 border-b border-slate-100 flex justify-between items-center"><span class="text-xs font-bold text-slate-700 flex items-center gap-1.5"><i class="fa-solid fa-user-tag text-slate-400"></i> 對象：{{ pitch.target }}</span></div>
-                                        <div class="p-4"><p class="text-sm text-slate-600 leading-relaxed mb-4">{{ pitch.text }}</p><button @click="copyToClipboard(pitch.text)" class="w-full py-2.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"><i class="fa-regular fa-copy"></i> 一鍵複製話術</button></div>
+                                        <div class="p-4"><p class="text-sm text-slate-600 leading-relaxed mb-4">{{ pitch.text }}</p><button @click="copyToClipboard(pitch.text)" class="w-full py-2.5 bg-blue-50 text-blue-700 rounded-full text-xs font-bold border border-blue-100 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"><i class="fa-regular fa-copy"></i> 一鍵複製話術</button></div>
                                     </div>
                                 </div>
                             </div>
@@ -586,9 +599,11 @@
                 <!-- ================= Modal: 全螢幕商品詳細資訊 ================= -->
                 <transition name="slide-up">
                     <div v-if="selectedProductDetail" class="absolute inset-0 z-[50] bg-slate-50 flex flex-col h-[100dvh] shadow-2xl">
-                        <header class="bg-slate-800 text-white p-4 flex items-center justify-between shrink-0 shadow-md">
-                            <div class="flex-1 min-w-0 pr-4"><div class="text-xs text-slate-400 mb-0.5"><i class="fa-regular fa-building"></i> {{ selectedProductDetail.company }}</div><h2 class="text-base font-bold truncate">{{ selectedProductDetail.name }}</h2></div>
-                            <button @click="closeProductModal" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                        <!-- Header 移除底色 (改透明)，文字改深色 -->
+                        <header class="bg-transparent p-4 flex items-center justify-between shrink-0">
+                            <div class="flex-1 min-w-0 pr-4"><div class="text-xs text-slate-500 mb-0.5"><i class="fa-regular fa-building"></i> {{ selectedProductDetail.company }}</div><h2 class="text-base font-bold text-slate-800 truncate">{{ selectedProductDetail.name }}</h2></div>
+                            <!-- 按鈕改圓弧且調整為淺色背景 -->
+                            <button @click="closeProductModal" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
                         </header>
                         <div class="flex-1 overflow-y-auto no-scrollbar p-5 pb-24">
                             <div class="flex flex-wrap gap-2 mb-6"><span v-for="(tag, idx) in selectedProductDetail.tags" :key="idx" class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200">{{ tag }}</span></div>
@@ -598,9 +613,19 @@
                                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[10px] text-slate-400 mb-0.5"><i class="fa-solid fa-shield-halved text-blue-400"></i> 基礎保額</span><span class="text-sm font-bold text-slate-700">{{ selectedProductDetail.amount }}</span></div>
                                 <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col"><span class="text-[10px] text-slate-400 mb-0.5"><i class="fa-solid fa-coins text-blue-400"></i> 參考保費</span><span class="text-sm font-bold text-rose-500">{{ selectedProductDetail.premium }}</span></div>
                             </div>
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 mb-6 relative overflow-hidden">
+                                <i class="fa-solid fa-wand-magic-sparkles absolute -right-3 -bottom-3 text-6xl text-blue-200 opacity-50"></i>
+                                <h3 class="font-bold text-blue-800 text-sm mb-3 flex items-center gap-2 relative z-10"><i class="fa-solid fa-lightbulb"></i> AI 推薦亮點</h3>
+                                <ul class="space-y-2 relative z-10">
+                                    <li v-for="(feature, idx) in selectedProductDetail.features" :key="idx" class="text-sm text-slate-700 flex items-start gap-2">
+                                        <i class="fa-solid fa-check text-emerald-500 mt-1 text-[10px]"></i><span>{{ feature }}</span>
+                                    </li>
+                                </ul>
+                            </div>
                             <div class="flex gap-3">
-                                <button @click="showRulesModal = true" class="flex-1 py-3.5 bg-indigo-50 text-indigo-700 font-bold rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-clipboard-list"></i> 投保規則</button>
-                                <button @click="showTermsModal = true" class="flex-1 py-3.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-file-contract"></i> 保單條款</button>
+                                <!-- 下方按鈕皆改為 rounded-full 圓弧 -->
+                                <button @click="showRulesModal = true" class="flex-1 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-clipboard-list"></i> 投保規則</button>
+                                <button @click="showTermsModal = true" class="flex-1 py-2 bg-slate-800 text-white font-bold rounded-full hover:bg-slate-700 transition-colors flex items-center justify-center gap-2 shadow-sm"><i class="fa-solid fa-file-contract"></i> 保單條款</button>
                             </div>
                         </div>
                     </div>
@@ -608,18 +633,20 @@
                 
                 <transition name="slide-up">
                     <div v-if="showRulesModal && selectedProductDetail" class="absolute inset-0 z-[60] bg-slate-50 flex flex-col h-[100dvh] shadow-2xl">
-                        <header class="bg-indigo-600 text-white p-4 flex items-center justify-between shrink-0 shadow-md">
-                            <h2 class="text-base font-bold flex items-center gap-2 truncate pr-4"><i class="fa-solid fa-clipboard-list"></i> 投保規則 - {{ selectedProductDetail.shortName || selectedProductDetail.name }}</h2>
-                            <button @click="showRulesModal = false" class="w-8 h-8 rounded-full bg-indigo-500 hover:bg-indigo-400 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                        <!-- Header 移除底色，文字深色，按鈕圓弧淺色 -->
+                        <header class="bg-transparent p-4 flex items-center justify-between shrink-0">
+                            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 truncate pr-4"><i class="fa-solid fa-clipboard-list text-indigo-600"></i> 投保規則 - {{ selectedProductDetail.shortName || selectedProductDetail.name }}</h2>
+                            <button @click="showRulesModal = false" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
                         </header>
                         <div class="flex-1 overflow-y-auto no-scrollbar p-5 pb-safe"><div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm"><p class="whitespace-pre-line text-sm text-slate-700 leading-loose">{{ selectedProductDetail.rules }}</p></div></div>
                     </div>
                 </transition>
                 <transition name="slide-up">
                     <div v-if="showTermsModal && selectedProductDetail" class="absolute inset-0 z-[60] bg-slate-50 flex flex-col h-[100dvh] shadow-2xl">
-                        <header class="bg-slate-800 text-white p-4 flex items-center justify-between shrink-0 shadow-md">
-                            <h2 class="text-base font-bold flex items-center gap-2 truncate pr-4"><i class="fa-solid fa-file-contract"></i> 保單條款 - {{ selectedProductDetail.shortName || selectedProductDetail.name }}</h2>
-                            <button @click="showTermsModal = false" class="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-600 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                        <!-- Header 移除底色，文字深色，按鈕圓弧淺色 -->
+                        <header class="bg-transparent p-4 flex items-center justify-between shrink-0">
+                            <h2 class="text-base font-bold text-slate-800 flex items-center gap-2 truncate pr-4"><i class="fa-solid fa-file-contract text-slate-600"></i> 保單條款 - {{ selectedProductDetail.shortName || selectedProductDetail.name }}</h2>
+                            <button @click="showTermsModal = false" class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 hover:bg-slate-300 flex items-center justify-center shrink-0 transition-colors"><i class="fa-solid fa-xmark"></i></button>
                         </header>
                         <div class="flex-1 overflow-y-auto no-scrollbar p-5 pb-safe"><div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm text-sm text-slate-700 leading-relaxed"><p class="whitespace-pre-line">{{ selectedProductDetail.termsContent }}</p></div></div>
                     </div>
@@ -935,7 +962,7 @@
                             <span>待選清單 Dock ({{ dockItems.length }})</span>
                             <div class="flex items-center gap-2">
                                 <span class="hidden sm:inline">長按商品拖曳至上方</span>
-                                <button @click.stop="clearAll" class="text-rose-400 bg-rose-500/20 px-2 py-1 rounded hover:bg-rose-500 hover:text-white transition-colors flex items-center gap-1">
+                                <button @click.stop="clearAll" class="text-rose-400 bg-rose-500/20 px-2 py-1 rounded-full hover:bg-rose-500 hover:text-white transition-colors flex items-center gap-1">
                                     <i class="fa-solid fa-trash-can"></i> 清除全部
                                 </button>
                             </div>
@@ -951,8 +978,8 @@
                             <div v-if="dockItems.length === 0" class="w-full text-center text-xs text-slate-500 py-4 italic">所有商品已移至分析台</div>
                         </div>
                         <div class="flex gap-3 mt-4">
-                            <button @click="analyzeZone" :disabled="zoneItems.length < 2" class="flex-1 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-bold text-xs disabled:opacity-50 disabled:from-slate-700 disabled:to-slate-700 shadow-md transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-crosshairs"></i> 分析目標區 ({{ zoneItems.length }})</button>
-                            <button @click="analyzeAll" :disabled="(dockItems.length + zoneItems.length) < 2" class="flex-1 py-3.5 bg-slate-700 text-white rounded-xl font-bold text-xs disabled:opacity-50 shadow-md hover:bg-slate-600 transition-all flex items-center justify-center gap-2">分析全部 ({{ dockItems.length + zoneItems.length }})</button>
+                            <button @click="analyzeZone" :disabled="zoneItems.length < 2" class="flex-1 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full font-bold text-xs disabled:opacity-50 disabled:from-slate-700 disabled:to-slate-700 shadow-md transition-all flex items-center justify-center gap-2"><i class="fa-solid fa-crosshairs"></i> 分析目標區 ({{ zoneItems.length }})</button>
+                            <button @click="analyzeAll" :disabled="(dockItems.length + zoneItems.length) < 2" class="flex-1 py-3.5 bg-slate-700 text-white rounded-full font-bold text-xs disabled:opacity-50 shadow-md hover:bg-slate-600 transition-all flex items-center justify-center gap-2">分析全部 ({{ dockItems.length + zoneItems.length }})</button>
                         </div>
                     </div>
                     <div v-if="draggingItem" class="fixed top-0 left-0 w-16 h-16 bg-purple-600 rounded-full flex flex-col items-center justify-center text-white p-1 shadow-2xl border-2 border-white z-[100] pointer-events-none opacity-80 scale-110" :style="{ transform: \`translate3d(calc(-50% + \${dragPos.x}px), calc(-50% + \${dragPos.y}px), 0)\` }">
