@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 (使用穩定的 CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
+    <!-- Driver.js (High Light 引導套件) -->
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -128,6 +131,47 @@
         .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
         .orbit-item-transition {
             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+
+        /* 避免手機長按與拖曳時選取文字或彈出系統選單 */
+        .prevent-select {
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important; /* 徹底禁用 iOS 長按選單 */
+        }
+
+        /* ================= Driver.js 客製化深色主題 ================= */
+        .custom-driver-popover {
+            background: rgba(15, 23, 42, 0.95) !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(99, 102, 241, 0.4) !important;
+            border-radius: 1.2rem !important;
+            backdrop-filter: blur(12px) !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.2) !important;
+        }
+        .custom-driver-popover .driver-popover-title {
+            color: #60a5fa !important;
+            font-size: 1.125rem !important;
+            font-weight: 900 !important;
+        }
+        .custom-driver-popover .driver-popover-description {
+            color: #cbd5e1 !important;
+            font-size: 0.875rem !important;
+            line-height: 1.6 !important;
+        }
+        .custom-driver-popover .driver-popover-footer button {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border: none !important;
+            text-shadow: none !important;
+            border-radius: 0.5rem !important;
+            font-weight: bold !important;
+            padding: 5px 12px !important;
+        }
+        .custom-driver-popover .driver-popover-close-btn {
+            color: #94a3b8 !important;
         }
     </style>
 </head>
@@ -386,8 +430,8 @@
                                     </div>
                                 </div>
                                 <div class="bg-white border-t border-slate-200 p-3 shadow-[0_-5px_15px_rgba(0,0,0,0.02)] shrink-0">
-                                    <div class="mb-2 flex flex-nowrap overflow-x-auto no-scrollbar gap-2 pb-1 cursor-grab active:cursor-grabbing" ref="quickQueryContainer" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag" @mouseleave="stopDrag">
-                                        <button v-for="query in quickQueries" :key="query" @click="handleQuickQuery(query)" class="whitespace-nowrap px-3 py-1.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100 flex items-center gap-1 select-none hover:bg-blue-100 transition-colors">
+                                    <div id="tour-quick-queries" class="mb-2 flex flex-nowrap overflow-x-auto no-scrollbar gap-2 pb-1 cursor-grab active:cursor-grabbing prevent-select" ref="quickQueryContainer" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag" @mouseleave="stopDrag">
+                                        <button v-for="query in quickQueries" :key="query" @click="handleQuickQuery(query)" class="whitespace-nowrap px-3 py-1.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-100 flex items-center gap-1 select-none prevent-select hover:bg-blue-100 transition-colors">
                                             <i class="fa-solid fa-bolt text-amber-500"></i> {{ query }}
                                         </button>
                                     </div>
@@ -399,7 +443,7 @@
                                         <button type="button" @click="removeChatAttachment" class="text-blue-400 hover:text-red-500 w-5 h-5 flex items-center justify-center rounded-full hover:bg-blue-100 transition-colors"><i class="fa-solid fa-xmark"></i></button>
                                     </div>
 
-                                    <form @submit.prevent="sendMessage(userInput)" class="flex gap-1.5 relative items-center">
+                                    <form id="tour-chat-input" @submit.prevent="sendMessage(userInput)" class="flex gap-1.5 relative items-center">
                                         <button type="button" @click="triggerChatFileUpload" class="w-9 h-9 shrink-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center transition-colors" title="上傳檔案"><i class="fa-solid fa-paperclip text-base"></i></button>
                                         <input type="file" ref="chatFileInput" class="hidden" @change="handleChatFileUpload" accept="image/*,.pdf,.doc,.docx">
 
@@ -1161,7 +1205,7 @@
                 </transition>
 
                 <!-- ================= 底部導覽列 ================= -->
-                 <nav class="absolute bottom-0 w-full bg-white border-t flex pb-safe pt-2 z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+                 <nav id="tour-nav" class="absolute bottom-0 w-full bg-white border-t flex pb-safe pt-2 z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
                     <button v-for="nav in navItems" :key="nav.id" @click="activeTab = nav.id" class="flex flex-col items-center justify-center min-w-[64px] flex-1 h-14 relative transition-colors" :class="activeTab === nav.id ? 'text-indigo-600' : 'text-slate-400'">
                         <div v-show="activeTab === nav.id" class="absolute top-0 w-10 h-1 bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-b-md -mt-2"></div>
                         <i :class="nav.icon" class="text-xl mb-1 transition-transform" :class="{'scale-110 drop-shadow-md': activeTab === nav.id}"></i>
@@ -1282,7 +1326,7 @@
             },
             template: `
                 <!-- touch-action: pan-y 允許上下滑動頁面 -->
-                <div class="relative w-full touch-pan-y select-none my-1" 
+                <div class="relative w-full touch-pan-y select-none prevent-select my-1" 
                      @pointerdown.stop="onPointerDown" 
                      @pointermove="onPointerMove" 
                      @pointerup="onPointerUp" 
@@ -1420,7 +1464,7 @@
                 return { fabRef, pos, currentTransform, isDragging, onPointerDown, onPointerMove, onPointerUp };
             },
             template: `
-                <div class="fixed z-40 touch-none flex flex-col items-center justify-center cursor-pointer"
+                <div class="fixed z-40 touch-none flex flex-col items-center justify-center cursor-pointer select-none prevent-select"
                      ref="fabRef"
                      @pointerdown.stop.prevent="onPointerDown"
                      @pointermove="onPointerMove"
@@ -1539,7 +1583,7 @@
                 };
             },
             template: `
-                <div class="fixed inset-0 z-50 glass-panel flex flex-col items-center overflow-hidden touch-none"
+                <div class="fixed inset-0 z-50 glass-panel flex flex-col items-center overflow-hidden touch-none select-none prevent-select"
                      ref="containerRef" @pointermove="onMove" @pointerup="endDrag" @pointercancel="endDrag">
                     
                     <header class="w-full p-4 flex justify-between items-center text-white shrink-0 relative z-10">
@@ -1672,6 +1716,29 @@
                         isLoggedIn.value = true;
                         isLoggingIn.value = false;
                         showToast('登入成功，歡迎回來！');
+                        
+                        // 登入成功後，使用 Driver.js 進行高亮遮罩引導
+                        setTimeout(() => {
+                            const driver = window.driver.js.driver;
+                            const driverObj = driver({
+                                showProgress: true,
+                                nextBtnText: '下一步',
+                                prevBtnText: '上一步',
+                                doneBtnText: '開始體驗',
+                                progressText: '{{current}} / {{total}}',
+                                popoverClass: 'custom-driver-popover',
+                                allowClose: false,
+                                steps: [
+                                    { popover: { title: '歡迎使用保險智能腦', description: '讓我們先快速了解系統的幾個核心介面與功能！' } },
+                                    { element: '#tour-nav', popover: { title: '四大模組切換', description: '您隨時可以在底部切換【保障與理賠】、【保單缺口】、【商品分析】與【時事話術】等專屬功能。', side: 'top', align: 'center' } },
+                                    { element: '#tour-quick-queries', popover: { title: '快捷指令區', description: '一鍵點擊常用指令，幫助您快速提問或試算理賠金額。您也可以左右滑動查看更多選項。', side: 'top', align: 'start' } },
+                                    { element: '#tour-chat-input', popover: { title: '多模態輸入', description: '除了文字，您還可以點擊麥克風「語音輸入」，或點擊迴紋針「上傳醫療單據」讓 AI 自動為您解析。', side: 'top', align: 'start' } },
+                                    { popover: { title: '💡 隱藏版高級操作', description: '最後一個小秘密：在系統中看到任何【商品名稱】時，只要長按 0.4 秒即可解鎖「無縫推滑介面」，快速將商品加入戰情分析台！' } }
+                                ]
+                            });
+                            driverObj.drive();
+                        }, 500);
+                        
                     }, 1000);
                 };
 
