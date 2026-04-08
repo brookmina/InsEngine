@@ -78,10 +78,27 @@
         .modal-fade-enter-from, .modal-fade-leave-to { opacity: 0; }
         .orbit-item-transition { transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease; }
 
-        /* 避免手機長按與拖曳時選取文字或彈出系統選單 */
-        .prevent-select {
-            -webkit-user-select: none !important; -moz-user-select: none !important; -ms-user-select: none !important;
-            user-select: none !important; -webkit-touch-callout: none !important;
+        /* ================= 全域防選取與長按選單攔截 ================= */
+        /* 讓全系統文字與圖片皆無法選取，並隱藏點擊高亮，使操作更像原生 APP */
+        * {
+            -webkit-tap-highlight-color: transparent; /* 移除點擊任何按鈕或區塊時閃爍的半透明灰色遮罩 */
+            -webkit-touch-callout: none; /* 徹底禁用 iOS 長按選單 (包含圖片儲存、連結拷貝等) */
+        }
+
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; /* 全域禁止文字反白選取 */
+        }
+
+        /* ⚠️ 核心例外：必須允許表單輸入框正常選取與叫出選單，否則無法打字、貼上或移動游標 */
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: auto !important;
+            -moz-user-select: auto !important;
+            -ms-user-select: auto !important;
+            user-select: auto !important;
+            -webkit-touch-callout: default !important;
         }
 
         /* ================= Driver.js 客製化深色主題 ================= */
@@ -863,6 +880,25 @@
                     if (idx > -1) { dockItems.value.push(zoneItems.value[idx]); zoneItems.value.splice(idx, 1); }
                 };
 
+                // === 新增：從待選清單刪除 ===
+                const removeFromDock = (id) => {
+                    dockItems.value = dockItems.value.filter(i => i.id !== id);
+                    emit('update-list', [...dockItems.value, ...zoneItems.value]);
+                    
+                    // 如果全部清空了，自動關閉面板
+                    if (dockItems.value.length === 0 && zoneItems.value.length === 0) {
+                        handleClose();
+                    }
+                };
+
+                // === 新增：清除全部 ===
+                const clearAll = () => {
+                    dockItems.value = [];
+                    zoneItems.value = [];
+                    emit('update-list', []);
+                    handleClose();
+                };
+
                 const getOrbitStyle = (index, total) => {
                     const radius = 110; const angle = (index / total) * 2 * Math.PI - Math.PI / 2;
                     const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius;
@@ -874,7 +910,7 @@
                 const analyzeAll = () => emit('analyze', [...dockItems.value, ...zoneItems.value]);
 
                 return { 
-                    dockItems, zoneItems, draggingItem, dragPos, isHoveringZone, zoneRef, containerRef, startDrag, onMove, endDrag, removeFromZone, getOrbitStyle, handleClose, analyzeZone, analyzeAll
+                    dockItems, zoneItems, draggingItem, dragPos, isHoveringZone, zoneRef, containerRef, startDrag, onMove, endDrag, removeFromZone, removeFromDock, clearAll, getOrbitStyle, handleClose, analyzeZone, analyzeAll
                 };
             },
             template: `
@@ -895,10 +931,22 @@
                         </div>
                     </div>
                     <div class="w-full bg-slate-900/80 p-5 rounded-t-3xl border-t border-slate-700 pb-safe shrink-0 relative z-10">
-                        <div class="text-[10px] text-slate-400 mb-3 font-bold flex justify-between"><span>待選清單 Dock ({{ dockItems.length }})</span><span>長按商品拖曳至上方</span></div>
+                        <div class="text-[10px] text-slate-400 mb-3 font-bold flex justify-between items-center">
+                            <span>待選清單 Dock ({{ dockItems.length }})</span>
+                            <div class="flex items-center gap-2">
+                                <span class="hidden sm:inline">長按商品拖曳至上方</span>
+                                <button @click.stop="clearAll" class="text-rose-400 bg-rose-500/20 px-2 py-1 rounded hover:bg-rose-500 hover:text-white transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> 清除全部
+                                </button>
+                            </div>
+                        </div>
                         <div class="flex overflow-x-auto no-scrollbar gap-3 pb-2 min-h-[70px]">
                             <div v-for="item in dockItems" :key="item.id" class="w-16 h-16 shrink-0 bg-slate-800 rounded-2xl border border-slate-600 flex flex-col items-center justify-center p-1 cursor-grab active:cursor-grabbing relative transition-all duration-300 touch-none" :class="{'opacity-30 scale-90': draggingItem && draggingItem.id === item.id}" @pointerdown.stop="startDrag($event, item, false)">
                                  <i class="fa-solid fa-box-open text-slate-400 mb-1 text-lg"></i><span class="text-[8px] text-slate-300 text-center w-full truncate leading-none">{{ item.name }}</span>
+                                 <!-- 新增：單獨刪除按鈕 (攔截 pointerdown 以防誤觸拖曳) -->
+                                 <button @pointerdown.stop.prevent="removeFromDock(item.id)" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-700 text-slate-300 hover:text-white hover:bg-rose-500 rounded-full flex items-center justify-center border border-slate-500 hover:border-rose-400 text-[8px] transition-colors z-10">
+                                     <i class="fa-solid fa-xmark"></i>
+                                 </button>
                             </div>
                             <div v-if="dockItems.length === 0" class="w-full text-center text-xs text-slate-500 py-4 italic">所有商品已移至分析台</div>
                         </div>
