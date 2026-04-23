@@ -27,11 +27,11 @@
                         isUnlocked.value = true; isDragging.value = true; dragX.value = 0; 
                         if (trackRef.value) trackRef.value.setPointerCapture(e.pointerId); 
                         if (navigator.vibrate) navigator.vibrate(50); longPressTimer = null; 
-                    }, 400); 
+                    }, 1000); 
                 };
                 const onPointerMove = (e) => { 
                     if (!isUnlocked.value) { 
-                        if (longPressTimer && (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10)) { clearTimeout(longPressTimer); longPressTimer = null; isMovedForClick = true; } 
+                        if (longPressTimer && (Math.abs(e.clientX - startX) > 15 || Math.abs(e.clientY - startY) > 15)) { clearTimeout(longPressTimer); longPressTimer = null; isMovedForClick = true; } 
                         return; 
                     } 
                     e.preventDefault(); let deltaX = e.clientX - startX; dragX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX * 0.85)); 
@@ -143,7 +143,7 @@
                     </div>
                     <div v-for="(item, idx) in zoneItems" :key="item.id" class="absolute left-1/2 top-1/2 w-16 h-16 bg-white dark:bg-stripe-darkCard rounded-full flex items-center justify-center text-indigo-950 dark:text-white text-[10px] font-black shadow-md border border-indigo-100 dark:border-gray-700 cursor-grab active:cursor-grabbing orbit-item-transition z-20 touch-none" :class="{'opacity-30 scale-90': draggingItem && draggingItem.id === item.id}" :style="getOrbitStyle(idx, zoneItems.length)" @pointerdown.stop="startDrag($event, item, true)">
                         <div class="w-full px-2 text-center truncate leading-tight">{{ item.name.substring(0, 4) }}...</div>
-                        <button @pointerdown.stop="removeFromZone(item.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-white dark:bg-gray-800 text-indigo-300 hover:text-rose-500 rounded-full flex items-center justify-center border border-indigo-100 dark:border-gray-700 text-[8px] shadow-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                        <button @pointerdown.stop="removeFromZone(item.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-rose-50 dark:bg-rose-900/30 text-rose-500 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full flex items-center justify-center border border-rose-200 dark:border-rose-800/50 text-[8px] shadow-sm transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 </div>
                 <div class="w-full bg-white/90 backdrop-blur dark:bg-stripe-darkCard p-5 rounded-t-3xl border-t border-indigo-50 dark:border-gray-700 pb-safe shrink-0 relative z-10 shadow-[0_-10px_40px_rgba(99,91,255,0.06)] dark:shadow-none">
@@ -155,7 +155,7 @@
                         <div v-for="item in dockItems" :key="item.id" class="w-16 h-16 shrink-0 bg-indigo-50/50 dark:bg-gray-800 rounded-2xl border border-indigo-100/50 dark:border-gray-700 flex flex-col items-center justify-center p-1 cursor-grab active:cursor-grabbing relative transition-all duration-300 touch-none shadow-sm hover:border-stripe-blurple" :class="{'opacity-30 scale-90': draggingItem && draggingItem.id === item.id}" @pointerdown.stop="startDrag($event, item, false)">
                             <i class="fa-solid fa-box-open text-indigo-300 dark:text-gray-500 mb-1 text-lg"></i>
                             <span class="text-[8px] text-slate-700 dark:text-gray-300 text-center w-full truncate leading-none font-bold">{{ item.name }}</span>
-                            <button @pointerdown.stop.prevent="removeFromDock(item.id)" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white dark:bg-gray-700 text-indigo-400 hover:text-rose-500 rounded-full flex items-center justify-center border border-indigo-100 dark:border-gray-600 text-[8px] transition-colors z-10 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
+                            <button @pointerdown.stop.prevent="removeFromDock(item.id)" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-50 dark:bg-rose-900/30 text-rose-500 hover:text-rose-700 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-full flex items-center justify-center border border-rose-200 dark:border-rose-800/50 text-[8px] transition-colors z-10 shadow-sm"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                         <div v-if="dockItems.length === 0" class="w-full text-center text-xs text-indigo-300 dark:text-gray-500 py-4 font-bold">所有商品已移至分析台</div>
                     </div>
@@ -207,6 +207,11 @@
                     return subs[activeTab.value]; 
                 });
                 
+                const isSimilarFiltersExpanded = ref(true);
+                const isSelectorFiltersExpanded = ref(true);
+                const isComboSelectorFiltersExpanded = ref(true);
+                const isGlobalSettingsExpanded = ref(true);
+
                 const showToast = (msg) => { toastMessage.value = msg; setTimeout(() => { toastMessage.value = ''; }, 2000); };
 
                 const handleLogin = () => {
@@ -219,7 +224,7 @@
                         setTimeout(() => {
                             if (window.driver && window.driver.js && typeof window.driver.js.driver === 'function') {
                                 const driver = window.driver.js.driver;
-                                const driverObj = driver({ showProgress: true, nextBtnText: '下一步', prevBtnText: '上一步', doneBtnText: '開始體驗', progressText: '{{current}} / {{total}}', popoverClass: 'custom-driver-popover', allowClose: false, steps: [ { popover: { title: '', description: '<div class="flex items-center gap-5 pt-2"><img src="img/aiimg.png" class="w-24 h-24 object-contain shrink-0 drop-shadow-xl"><div class="flex flex-col text-left"><h3 class="text-xl font-black text-indigo-950 dark:text-white mb-1.5 tracking-tight">歡迎使用保險智能腦</h3><p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed font-bold">讓我們先快速了解系統的幾個核心介面與功能！</p></div></div>' } }, { element: '#tour-nav', popover: { title: '四大模組切換', description: '您隨時可以在底部切換專屬功能。', side: 'top', align: 'center' } }, { element: '#tour-quick-queries', popover: { title: '快捷指令區', description: '一鍵點擊常用指令，或左右滑動查看更多。', side: 'top', align: 'start' } }, { element: '#tour-chat-input', popover: { title: '多模態輸入', description: '可點擊麥克風語音輸入，或點擊迴紋針上傳單據。', side: 'top', align: 'start' } }, { popover: { title: '💡 隱藏版高級操作', description: '長按 0.4 秒任何【商品名稱】即可解鎖「無縫推滑介面」！' } } ] });
+                                const driverObj = driver({ showProgress: true, nextBtnText: '下一步', prevBtnText: '上一步', doneBtnText: '開始體驗', progressText: '{{current}} / {{total}}', popoverClass: 'custom-driver-popover', allowClose: false, steps: [ { popover: { title: '', description: '<div class="flex items-center gap-5 pt-2"><img src="img/aiimg.png" class="w-24 h-24 object-contain shrink-0 drop-shadow-xl"><div class="flex flex-col text-left"><h3 class="text-xl font-black text-indigo-950 dark:text-white mb-1.5 tracking-tight">歡迎使用保險智能腦</h3><p class="text-sm text-slate-700 dark:text-gray-300 leading-relaxed font-bold">讓我們先快速了解系統的幾個核心介面與功能！</p></div></div>' } }, { element: '#tour-nav', popover: { title: '四大模組切換', description: '您隨時可以在底部切換專屬功能。', side: 'top', align: 'center' } }, { element: '#tour-quick-queries', popover: { title: '快捷指令區', description: '一鍵點擊常用指令，或左右滑動查看更多。', side: 'top', align: 'start' } }, { element: '#tour-chat-input', popover: { title: '多模態輸入', description: '可點擊麥克風語音輸入，或點擊迴紋針上傳單據。', side: 'top', align: 'start' } }, { popover: { title: '💡 隱藏版高級操作', description: '長按 3 秒任何【商品名稱】即可解鎖「無縫推滑介面」！' } } ] });
                                 driverObj.drive();
                             }
                         }, 500);
@@ -758,7 +763,8 @@
                     customCombos, showCustomComboManagerModal, editingCombo, singleProductsOptions, startAddCombo, startEditCombo, deleteCombo, removeComboItem, saveCombo, cancelEditCombo,
                     showComboItemSelectorModal, comboSearchComp, comboSearchProd, comboSearchType, comboSearchStatus,
                     comboFilteredProducts, comboModalProductOptions, openComboItemSelector, closeComboItemSelector, resetComboModalSearch,
-                    tempSelectedComboItems, toggleComboItemSelection, confirmComboItemsSelection
+                    tempSelectedComboItems, toggleComboItemSelection, confirmComboItemsSelection,
+                    isSimilarFiltersExpanded, isSelectorFiltersExpanded, isComboSelectorFiltersExpanded, isGlobalSettingsExpanded
                 };
             }
         });
