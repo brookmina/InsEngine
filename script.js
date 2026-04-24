@@ -25,21 +25,20 @@
                     startX = e.clientX; startY = e.clientY; isMovedForClick = false; 
                     longPressTimer = setTimeout(() => { 
                         isUnlocked.value = true; isDragging.value = true; dragX.value = 0; 
-                        if (trackRef.value) trackRef.value.setPointerCapture(e.pointerId); 
                         if (navigator.vibrate) navigator.vibrate(50); longPressTimer = null; 
-                    }, 1000); 
+                    }, 400); 
                 };
                 const onPointerMove = (e) => { 
                     if (!isUnlocked.value) { 
-                        if (longPressTimer && (Math.abs(e.clientX - startX) > 15 || Math.abs(e.clientY - startY) > 15)) { clearTimeout(longPressTimer); longPressTimer = null; isMovedForClick = true; } 
+                        if (longPressTimer && (Math.abs(e.clientX - startX) > 20 || Math.abs(e.clientY - startY) > 20)) { clearTimeout(longPressTimer); longPressTimer = null; isMovedForClick = true; } 
                         return; 
                     } 
-                    e.preventDefault(); let deltaX = e.clientX - startX; dragX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX * 0.85)); 
+                    if (e.cancelable) e.preventDefault(); 
+                    let deltaX = e.clientX - startX; dragX.value = Math.max(-maxDrag, Math.min(maxDrag, deltaX * 0.85)); 
                 };
                 const onPointerUp = (e) => { 
                     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; if (!isMovedForClick) emit('action-click'); } 
                     if (isUnlocked.value) { 
-                        if (trackRef.value) trackRef.value.releasePointerCapture(e.pointerId); 
                         isDragging.value = false; 
                         if (dragX.value <= -threshold) emit('view', props.itemData); 
                         else if (dragX.value >= threshold) emit('compare', props.itemData); 
@@ -47,16 +46,19 @@
                     } 
                 };
                 const closeOutside = (e) => { if (isUnlocked.value && trackRef.value && !trackRef.value.contains(e.target)) { isUnlocked.value = false; dragX.value = 0; } };
-                onMounted(() => window.addEventListener('pointerdown', closeOutside)); onUnmounted(() => window.removeEventListener('pointerdown', closeOutside));
+                const globalMove = (e) => { if (isUnlocked.value) onPointerMove(e); };
+                const globalUp = (e) => { if (isUnlocked.value) onPointerUp(e); };
+                onMounted(() => { window.addEventListener('pointerdown', closeOutside); window.addEventListener('pointermove', globalMove, { passive: false }); window.addEventListener('pointerup', globalUp); window.addEventListener('pointercancel', globalUp); }); 
+                onUnmounted(() => { window.removeEventListener('pointerdown', closeOutside); window.removeEventListener('pointermove', globalMove); window.removeEventListener('pointerup', globalUp); window.removeEventListener('pointercancel', globalUp); });
                 const overlayBackground = computed(() => { const baseDark = 'rgba(14, 19, 31, 0.9)'; if (dragX.value < 0) return `radial-gradient(circle at 10% 50%, rgba(45, 212, 191, ${Math.min(1, Math.abs(dragX.value) / maxDrag) * 0.5}), transparent 60%), ${baseDark}`; if (dragX.value > 0) return `radial-gradient(circle at 90% 50%, rgba(99, 91, 255, ${Math.min(1, dragX.value / maxDrag) * 0.5}), transparent 60%), ${baseDark}`; return baseDark; });
                 return { trackRef, isUnlocked, isDragging, dragX, threshold, onPointerDown, onPointerMove, onPointerUp, overlayBackground };
             },
             template: `
-            <div class="relative w-full touch-pan-y select-none prevent-select my-1" @pointerdown.stop="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp" ref="trackRef">
+            <div class="relative w-full touch-pan-y select-none prevent-select my-1" @contextmenu.prevent @pointerdown.stop="onPointerDown" @pointermove="onPointerMove" @pointerup="onPointerUp" @pointercancel="onPointerUp" ref="trackRef">
                 <div class="w-full transition-all duration-300 flex items-center" :class="[textClass, {'opacity-30': isUnlocked}]">{{ displayText }} <i v-if="showIcon" class="fa-solid fa-circle-info text-[10px] opacity-70 ml-1.5 shrink-0 mt-0.5"></i></div>
                 <teleport to="body">
                     <transition name="modal-fade">
-                        <div v-if="isUnlocked" class="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden touch-none" :style="{ background: overlayBackground, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }">
+                        <div v-if="isUnlocked" @touchmove.prevent @pointermove.prevent class="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden touch-none" :style="{ background: overlayBackground, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }">
                             <div class="absolute top-[25%] w-full px-8 text-center transition-all duration-300" :class="dragX < -threshold ? 'text-teal-400 drop-shadow-[0_0_15px_rgba(45,212,191,0.5)] scale-105' : (dragX > threshold ? 'text-stripe-blurple drop-shadow-[0_0_15px_rgba(99,91,255,0.5)] scale-105' : 'text-white')"><h2 class="text-2xl font-extrabold mb-2 leading-tight truncate tracking-tight">{{ displayText }}</h2><p class="text-xs font-semibold opacity-70" v-if="Math.abs(dragX) < threshold">← 左右滑動選擇操作 →</p><p class="text-xs font-semibold animate-pulse" v-else-if="dragX <= -threshold">放開以「查看細項」</p><p class="text-xs font-semibold animate-pulse" v-else-if="dragX >= threshold">放開以「加入比較」</p></div>
                             <div class="relative w-[320px] h-20 rounded-full border border-white/10 bg-black/20 shadow-inner flex items-center justify-between px-5 mt-10">
                                 <div class="flex flex-col items-center justify-center w-20 transition-transform duration-200" :class="dragX < -threshold ? 'scale-110' : 'opacity-60'"><div class="w-12 h-12 rounded-full border flex items-center justify-center mb-2 transition-all" :class="dragX < -threshold ? 'border-teal-400 shadow-[0_0_20px_rgba(45,212,191,0.4)] bg-teal-900/60 text-teal-400' : 'border-white/20 bg-white/5 text-white/50'"><i class="fa-solid fa-file-lines text-lg"></i></div><span class="text-[10px] font-bold tracking-widest uppercase transition-colors" :class="dragX < -threshold ? 'text-teal-300' : 'text-white/50'">查看</span></div>
@@ -550,13 +552,13 @@
                             items: ['傷害身故保險金', '傷害醫療日額保險金', '傷害限額(實支實付)醫療保險金'],
                             docs: [
                                 { title: '保險金申請書及應檢附文件', desc: '' },
-                                { title: '死亡證明書或相驗屍體證明書', desc: '需蓋關防' },
+                                { title: '死亡證明書或相驗屍體證明書', desc: '' },
                                 { title: '被保險人除戶戶籍謄本', desc: '' },
                                 { title: '受益人之身份證明文件或戶口名簿影本', desc: '' },
                                 { title: '意外傷害事故證明文件', desc: '' },
                                 { title: '保險單', desc: '' },
-                                { title: 'FATCA暨 CRS 身分聲明書', desc: '個人適用' },
-                                { title: '詳細醫師診斷書', desc: '需蓋關防' },
+                                { title: 'FATCA暨 CRS 身分聲明書', desc: '' },
+                                { title: '詳細醫師診斷書', desc: '' },
                                 { title: '傷害事故證明文件', desc: '' },
                                 { title: '收據副本及費用明細表', desc: '' }
                             ]
@@ -566,14 +568,14 @@
                     policyNumbers: ['GL10087654'],
                             items: ['身故保險金', '傷害住院醫療保險金(日額)', '傷害醫療保險金(實支實付)'],
                             docs: [
-                                { title: '理賠申請書', desc: '含同意查詢暨授權聲明書和病歷、醫療及健康檢查等個人資料蒐集、處理及利用同意書' },
+                                { title: '理賠申請書', desc: '' },
                                 { title: '保險單', desc: '' },
                                 { title: '受益人生存身份證明', desc: '' },
                                 { title: '被保險人除戶戶籍謄本', desc: '' },
                                 { title: '相驗屍體證明書或死亡診斷書', desc: '' },
-                                { title: '意外傷害事故證明文件', desc: '申請意外傷害事故所致身故保險金' },
-                                { title: '據以診斷之病理、檢驗或專業評量表', desc: '申請癌症身故保險金且之前未申請癌症醫療保險金' },
-                                { title: '美國海外帳戶FATCA及CRS身分聲明書', desc: '個人資料告知暨同意書' },
+                                { title: '意外傷害事故證明文件', desc: '' },
+                                { title: '據以診斷之病理、檢驗或專業評量表', desc: '' },
+                                { title: '美國海外帳戶FATCA及CRS身分聲明書', desc: '' },
                                 { title: '醫療診斷書或住院、外科手術證明', desc: '' },
                                 { title: '依約應附之醫療費用收據或費用證明', desc: '' },
                                 { title: '社會保險給付證明文件', desc: '' },
