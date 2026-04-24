@@ -784,7 +784,7 @@
             },
             template: `
                 <div class="relative w-full text-left">
-                    <input type="text" :value="modelValue" @input="handleInput" @focus="isOpen = true" @blur="hideDropdown" :placeholder="placeholder" class="w-full bg-white dark:bg-stripe-darkBg border border-indigo-100 dark:border-gray-700 text-slate-800 dark:text-white rounded-lg px-3 py-2 text-xs focus:border-stripe-blurple focus:shadow-stripe-focus outline-none transition-all placeholder-indigo-300 shadow-sm">
+                    <input type="text" :value="modelValue" @input="handleInput" @focus="isOpen = true" @blur="hideDropdown" :placeholder="placeholder" class="w-full bg-white dark:bg-stripe-darkBg border border-indigo-100 dark:border-gray-700 text-slate-800 dark:text-white rounded-full px-3 py-2 text-xs focus:border-stripe-blurple focus:shadow-stripe-focus outline-none transition-all placeholder-indigo-300 shadow-sm">
                     <i class="fa-solid fa-magnifying-glass absolute right-3 top-2.5 text-indigo-300 text-xs pointer-events-none"></i>
                     <div v-if="isOpen && filteredOptions?.length > 0" class="absolute z-50 w-full mt-1 bg-white/95 backdrop-blur dark:bg-stripe-darkCard border border-indigo-100 dark:border-gray-700 rounded-xl shadow-stripe max-h-48 overflow-y-auto">
                         <div v-for="opt in filteredOptions" :key="opt" @mousedown.prevent="selectOption(opt)" class="px-3 py-2.5 text-xs text-slate-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 cursor-pointer border-b border-indigo-50 dark:border-gray-700/50 last:border-0 transition-colors font-bold">{{ opt }}</div>
@@ -812,7 +812,7 @@
             template: `
                 <div class="relative w-full text-left" :class="{'opacity-50': disabled}">
                     <input type="text" :value="searchKeyword" @input="handleInput" @focus="!disabled && (isOpen = true, searchKeyword='')" @blur="hideDropdown" :placeholder="placeholder" :disabled="disabled" 
-                        class="w-full bg-white dark:bg-stripe-darkBg border border-indigo-100 dark:border-gray-700 text-slate-800 dark:text-white rounded-lg outline-none transition-all placeholder-indigo-300 shadow-sm cursor-text disabled:bg-indigo-50/50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed focus:border-stripe-blurple focus:shadow-stripe-focus"
+                        class="w-full bg-white dark:bg-stripe-darkBg border border-indigo-100 dark:border-gray-700 text-slate-800 dark:text-white rounded-full outline-none transition-all placeholder-indigo-300 shadow-sm cursor-text disabled:bg-indigo-50/50 dark:disabled:bg-gray-800 disabled:cursor-not-allowed focus:border-stripe-blurple focus:shadow-stripe-focus"
                         :class="compact ? 'px-2 py-1.5 text-[10px]' : 'px-3 py-2 text-sm'">
                     <i class="fa-solid fa-chevron-down absolute right-3 pointer-events-none text-indigo-300 dark:text-gray-400" :class="compact ? 'top-[7px] text-[10px]' : 'top-[10px] text-xs'"></i>
                     <div v-if="isOpen && filteredOptions?.length > 0" class="absolute z-[100] w-full mt-1 bg-white/95 backdrop-blur dark:bg-stripe-darkCard border border-indigo-100 dark:border-gray-700 rounded-xl shadow-[0_8px_30px_rgba(99,91,255,0.08)] max-h-48 overflow-y-auto">
